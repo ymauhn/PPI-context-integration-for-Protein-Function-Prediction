@@ -125,9 +125,12 @@ def _build_index_loaders(
         dl_kwargs["persistent_workers"] = True
         dl_kwargs["prefetch_factor"] = 2
 
-    dl_tr = DataLoader(ds_tr, shuffle=True, **dl_kwargs)
-    dl_ev = DataLoader(ds_ev, shuffle=False, **dl_kwargs)
+    # Defensive: ensure `shuffle` is not in dl_kwargs (prevents duplicate keyword error)
+    dl_kwargs.pop("shuffle", None)
 
+    dl_tr = DataLoader(ds_tr, **{**dl_kwargs, "shuffle": True})
+    dl_ev = DataLoader(ds_ev, **{**dl_kwargs, "shuffle": False})
+ 
     return (
         dl_tr,
         dl_ev,
