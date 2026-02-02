@@ -15,7 +15,7 @@ def _read_df(path: Path) -> pd.DataFrame:
         # Fall back to using the first column as ID
         df = df.rename(columns={df.columns[0]: "ID"})
 
-    # Frozen dataset contract:
+    
     # column 0 = ID, column 1 = amino acid sequence, labels start at column 2
     if df.shape[1] < 3:
         raise ValueError(
