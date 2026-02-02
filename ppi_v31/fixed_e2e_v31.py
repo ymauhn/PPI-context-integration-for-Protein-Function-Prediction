@@ -117,8 +117,7 @@ def _build_index_loaders(
     dl_kwargs = dict(
         batch_size=cfg["batch_size"],
         num_workers=cfg["num_workers"],
-        pin_memory=use_gpu,
-        shuffle=False,  # overwritten below
+        pin_memory=use_gpu
     )
 
     # persistent_workers only valid/useful when num_workers > 0
