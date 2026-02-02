@@ -10,3 +10,6 @@ tqdm>=4.66
 # Optional: ProtT5 embedding extraction
 transformers>=4.40
 sentencepiece>=0.1.99
+
+goatools>=1.4
+scikit-learn>=1.2
