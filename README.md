@@ -1,193 +1,104 @@
- \# PPI v3.1 — Protein Function Classification (E2E)
+# PPI v3.1: Protein Function Prediction based on PPI Context + ProtT5 (E2E)
 
- 
+The paper is available **here** (link coming soon).
 
- This repository contains the \*\*core code\*\* used in our paper experiments for \*\*protein function prediction\*\*
+## Description
 
- by combining:
+PPI v3.1 is an end-to-end (E2E) pipeline for **multi-label protein function prediction (Gene Ontology)** that integrates:
+- **Transformer-based sequence embeddings** (ProtT5; last three encoder layers),
+- **PPI-based context integration** via **fixed (non-trainable) multi-hop message passing**, and
+- a **vision backbone** (e.g., ConvNeXt-Tiny / ResNet-50) trained on a compact **3×32×32** representation.
 
- 
+In our setup, each protein is represented by three ProtT5 layer vectors (3 × 1024 = 3072), optionally contextualized on the PPI graph, reshaped into a 3×32×32 “image”, and fed to a vision model to predict GO terms for **BP**, **CC**, and **MF**.
 
- - \*\*Sequence embeddings\*\* from \*\*ProtT5\*\* (last 3 encoder layers),
+## Installation
 
- - \*\*PPI-based context integration\*\* via fixed, non-parametric message passing,
+To install and set up the project, follow the steps below:
 
- - A \*\*vision backbone\*\* (e.g., ConvNeXt-Tiny / ResNet-50) trained on a compact \*\*3×32×32\*\* image-like representation.
+1. Clone the repository:
 
- 
+   ```bash
+   git clone https://github.com/<your-username>/<your-repo>.git
+   cd <your-repo>
+   ```
 
- > The code is provided as a \*\*core-only\*\* release focused on the E2E pipeline used in the article.
+2. Install the dependencies:
 
- 
+   ```bash
+   pip install -r requirements.txt
+   ```
 
+> **PyTorch/CUDA note:** If you use GPU, install `torch`/`torchvision` using the official PyTorch selector for your CUDA version, then install the remaining packages from `requirements.txt`.
 
+## Dataset
 
- 
-## What is included
+This repository **does not ship** large datasets or embeddings.
 
- - End-to-end entrypoint used in the paper:
+The expected data layout and file formats are described in **[`DATASET.md`](DATASET.md)**.
 
- &nbsp; - `python -m ppi\_v31.fixed\_e2e\_v31 ...`
+If/when we publish the dataset externally, links will be added here:
+- Dataset (CSV splits + PPI + GO OBO): **Zenodo link coming soon**
+- IC values: **Zenodo link coming soon**
 
- - Fixed PPI contextualization + image construction (`PPIImageFixed\_v31.py`)
+## Preprocessing (ProtT5 embeddings)
 
- - Training loop (`engine.py`), loss (`losses.py`), metrics (`metrics.py`)
+If you do not have raw embeddings yet, you can extract them from the **`sequence`** column of the split CSVs.
 
- - Vision backbones (`models.py`)
+In the repository root, run:
 
- - Optional utility to extract ProtT5 embeddings (`extract\_raw.py`, `prot\_t5.py`)
+```bash
+python -m ppi_v31.extract_raw   --domain bp   --data-dir /path/to/data   --out /path/to/raw/raw_bp   --batch-size 256   --precision bf16
+```
 
- 
+This will save, for each protein ID `<ID>`:
+- `<ID>-24.npy` (last ProtT5 encoder layer)
+- `<ID>-23.npy` (second-to-last layer)
+- `<ID>-22.npy` (third-to-last layer)
 
-## What is NOT included
+## Reproducibility
 
-# Large files are not shipped:
+To reproduce the E2E experiments:
 
- - CSV splits (`\*\_train.csv`, `\*\_val.csv`, `\*\_test.csv`)
+1. Prepare the dataset following **[`DATASET.md`](DATASET.md)**.
+2. (Optional) Extract ProtT5 embeddings using the command above.
+3. Run the E2E entrypoint:
 
- - Information content (`\*\_ic.csv`)
+   ```bash
+   python -m ppi_v31.fixed_e2e_v31 --help
+   ```
 
- - PPI edge list (`ppi.csv`)
+A command template (same style as used in our experiments):
 
- - Gene Ontology file (`go.obo`)
+```bash
+python -m ppi_v31.fixed_e2e_v31   --domain bp   --data-dir /path/to/data   --raw-dir  /path/to/raw/raw_bp   --ppi-csv  /path/to/data/ppi.csv   --split test   --hops 5   --alpha-init 0.5   --thr 0.0   --norm col   --convexize 0   --arch convnext_tiny   --unfreeze all   --pretrained 1   --batch-size 64   --lr 1e-4   --max-epochs 100   --patience 20   --num-workers 4   --loss-name protein   --pos-weight-mode ic   --runs-dir /path/to/runs_v31_new   --seed 1337
+```
 
- - Extracted embeddings (`\*.npy`)
+All commands used in the paper (hops sweep, alpha sweep, backbone comparison) are listed in **[`ARTICLE_RUNS.md`](ARTICLE_RUNS.md)**.
 
- - Training artifacts (checkpoints, logs, runs)
+## Smoke test (no real data required)
 
+To verify that the entrypoints and paths work end-to-end **without** real data, run:
 
+```bash
+python scripts/smoke_e2e.py
+```
 
- See \*\*\[`DATASET.md`](DATASET.md)\*\* for the exact data layout and file formats expected by the code.
+This generates a tiny synthetic dataset and runs 1 epoch with `--pretrained 0` to avoid downloads.
 
- 
+## Dataset Adaptation
 
+If you need to run this pipeline on your own dataset, you must create a dataset with the **same structure** as ours:
 
+- For each ontology (`bp`, `cc`, `mf`), provide:
+  - `<domain>_train.csv`, `<domain>_val.csv`, `<domain>_test.csv`
+  - First column: protein ID
+  - Second column: protein sequence (amino acids)
+  - Remaining columns: GO terms in one-hot encoding format (0/1)
 
+- Provide:
+  - `<domain>_ic.csv` with columns `terms, IC` (required when using `--pos-weight-mode ic`)
+  - `ppi.csv` with **three columns**: `(protein_A, protein_B, score)`
+  - `go.obo` (Gene Ontology OBO file)
 
-
-# Installation
-
-
-
-## Requirements
-
- Python 3.10+
-
- PyTorch + torchvision (GPU recommended for training)
-
- NumPy / Pandas / tqdm
-
- (Optional) `transformers` + `sentencepiece` for ProtT5 extraction
-
- 
-
- Install dependencies:
-
- 
-
- ```bash
-
- pip install -r requirements.txt
-
- ```
-
- 
-
- > Note: For CUDA-enabled PyTorch, you may prefer installing `torch`/`torchvision` via the official PyTorch selector,
-
- then install the remaining dependencies with `pip install -r requirements.txt`.
-
- 
-
-
-
- 
-
-# Data layout (required)
-
- 
-
- The E2E pipeline assumes:
-
- - split CSVs with columns: `ID`, `sequence`, then GO term labels (0/1)
-
- - per-protein embeddings stored under `--raw-dir` as:
-
- &nbsp; - `<ID>-24.npy`, `<ID>-23.npy`, `<ID>-22.npy`
-
- 
-
-Full details: \*\*\[`DATASET.md`](DATASET.md)\*\*.
-
-
-
-
-
- 
-
-# Run the E2E pipeline (paper entrypoint)
-
- 
-
- Example command template (same style as in the paper):
-
-# 
-
- ```bash
-
- python -m ppi\_v31.fixed\_e2e\_v31   --domain bp   --data-dir /path/to/ppi\_protein\_function\_pipeline/data   --raw-dir  /path/to/ppi\_protein\_function\_pipeline/raw/raw\_bp   --ppi-csv  /path/to/ppi\_protein\_function\_pipeline/data/ppi.csv   --split test   --hops 5   --alpha-init 0.5   --thr 0.0   --norm col   --convexize 0   --arch convnext\_tiny   --unfreeze all   --pretrained 1   --batch-size 64   --lr 1e-4   --max-epochs 100   --patience 20   --num-workers 4   --loss-name protein   --pos-weight-mode ic   --runs-dir /path/to/runs\_v31\_new   --seed 1337
-
- ```
-
-
-
-All commands used for the experiments (hops sweep, alpha sweep, backbone comparison) are listed in:
-
- \*\*\[`ARTICLE\_RUNS.md`](ARTICLE\_RUNS.md)\*\*
-
- 
-
-
- 
-
-# Extract ProtT5 embeddings (optional preprocessing)
-
- 
-
- If you do \*\*not\*\* have embeddings yet, you can generate them from the `sequence` column in the CSV splits:
-
- 
-
- ```bash
-
- python -m ppi\_v31.extract\_raw   --domain bp   --data-dir /path/to/ppi\_protein\_function\_pipeline/data   --out /path/to/ppi\_protein\_function\_pipeline/raw/raw\_bp   --batch-size 256   --precision bf16
-
- ```
-
- 
-
- This will save, for each protein ID `<ID>`:
-
- 
-
-    - `<ID>-24.npy` (last encoder layer)
-
-    - `<ID>-23.npy` (second-to-last)
-
-    - `<ID>-22.npy` (third-to-last)
-
-
-
-
-# Reproducibility notes
-
-- This repo intentionally tracks \*\*code only\*\*. Data and large artifacts must be provided externally.
-
-- Use `--seed` for deterministic behavior where applicable.
-
-- Ensure your local environment matches the paper setup (PyTorch + CUDA version, etc.).
-
-
-
-
+See **[`DATASET.md`](DATASET.md)** for the exact expected layout.
 
