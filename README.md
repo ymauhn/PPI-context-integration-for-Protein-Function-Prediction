@@ -1,4 +1,4 @@
-# PPI v3.1: Protein Function Prediction based on PPI Context + ProtT5 (E2E)
+# Protein Function Prediction based on PPI Context + ProtT5 (E2E)
 
 The paper is available **here** (link coming soon).
 
