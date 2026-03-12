@@ -102,3 +102,28 @@ If you need to run this pipeline on your own dataset, you must create a dataset 
 
 See **[`DATASET.md`](DATASET.md)** for the exact expected layout.
 
+## Citation
+
+This repository contains the source code of **"From Graphs to Images: Non-Parametric PPI Context Integration for Vision-Based Protein Function Prediction"**, as presented in the paper:
+
+Yeonatan Mauhnoom, Gabriel Bianchin de Oliveira, Helio Pedrini, Zanoni Dias.  
+*"From Graphs to Images: Non-Parametric PPI Context Integration for Vision-Based Protein Function Prediction,"*  
+in Proceedings of the **21st International Conference on Computer Vision Theory and Applications (VISAPP 2026)**, Volume 1,  
+Marbella, Spain, March 9–11, 2026, pp. 157–166.
+
+If you use this source code and/or its results, please cite our publication:
+```bibtex
+@inproceedings{mauhnoom2026visapp,
+  author    = {Mauhnoom, Yeonatan and de Oliveira, Gabriel Bianchin and Pedrini, Helio and Dias, Zanoni},
+  title     = {From Graphs to Images: Non-Parametric PPI Context Integration for Vision-Based Protein Function Prediction},
+  booktitle = {Proceedings of the 21st International Conference on Computer Vision Theory and Applications (VISAPP 2026)},
+  volume    = {1},
+  pages     = {157--166},
+  address   = {Marbella, Spain},
+  month     = {Mar},
+  year      = {2026},
+  publisher = {SCITEPRESS -- Science and Technology Publications, Lda.},
+  isbn      = {978-989-758-804-4},
+  issn      = {2184-4321}
+}
+
