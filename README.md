@@ -124,6 +124,7 @@ If you use this source code and/or its results, please cite our publication:
   year      = {2026},
   publisher = {SCITEPRESS -- Science and Technology Publications, Lda.},
   isbn      = {978-989-758-804-4},
-  issn      = {2184-4321}
+  issn      = {2184-4321},
+  DOI = {10.5220/0000216600004084}
 }
 
